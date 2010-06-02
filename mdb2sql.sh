@@ -16,7 +16,9 @@ if [ $# -gt 0 ]; then
       s%(BINARY|OLE|Unknown ([0-9a-fx]+)?)%BLOB%i;
       s%\s*\(\d+\)\s*(,?[ \t]*)$%${1}%;'
 # Now dump the insert statements
-    for i in $(mdb-tables -S $1 | sed '/^MSys*/d'); do echo $i; mdb-export -SIR ";\n" $1 $i; done
+    for i in $(mdb-tables -S $1 | sed '/^MSys*/d'); do
+      mdb-export -SIR ";\n" $1 $i
+    done
 
   else
 
