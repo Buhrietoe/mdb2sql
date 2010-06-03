@@ -10,13 +10,26 @@ if [ $# -gt 0 ]; then
 # Make sure the MDB file exists
   if [ -e $1 ]; then
 # First dump the schema
-    mdb-schema -S $1 | perl -wpe 's%^DROP TABLE %DROP TABLE IF EXISTS %i;
-      s%(Memo/Hyperlink|DateTime( \(Short\))?)%TEXT%i;
-      s%(Boolean|Byte|Byte|Numeric|Replication ID|(\w+ )?Integer)%INTEGER%i;
-      s%(BINARY|OLE|Unknown ([0-9a-fx]+)?)%BLOB%i;
-      s%\s*\(\d+\)\s*(,?[ \t]*)$%${1}%;'
+    mdb-schema -S $1 | sed -e '
+      /^--*/d;
+      s/^drop table /DROP TABLE IF EXISTS /i;
+      s%memo/hyperlink%TEXT%i;
+      s/datetime (short)/DATETIME/i;
+      s/boolean/INT/i;
+      s/byte/INT/i;
+      s/numeric/INT/i;
+      s/replication ID/INT/i;
+      s/long integer/INT/i;
+      s/integer/INT/i;
+      s/binary/BLOB/i;
+      s/ole/BLOB/i;
+      s/unkown ([0-9a-fx]+)?)/BLOB/i;
+      s/currency/FLOAT/i;
+      s/double/FLOAT/i;
+      s/single/INT/i'
+
 # Now dump the insert statements
-    for i in $(mdb-tables -S $1 | sed '/^MSys*/d'); do
+    for i in $(mdb-tables -S $1 | sed -e '/^MSys*/d'); do
       mdb-export -SIR ";\n" $1 $i
     done
 
